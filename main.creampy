@@ -25,7 +25,7 @@ async def fetch_group_data(proxy):
     last_sleep_time = start_time
 
     while True:
-        group_ids = ','.join(str(random.randint(33350000, 34060000)) for _ in range(100))
+        group_ids = ','.join(str(random.randint(32700000, 34060000)) for _ in range(100))
         async with httpx.AsyncClient(proxies=proxy) as client:
             try:
                 response = await client.get(f'https://groups.roblox.com/v2/groups?groupIds={group_ids}')
