@@ -9,7 +9,7 @@ Ratelimited_Threads = 0
 
 found = 0
 checked = 0
-webhook_url = "https://discord.com/api/webhooks/1207498723861733386/asCpphhX5meFAhKe4-hPhnw7zUzMHn1GCDsZpHv5H2ImSq6sxvV_QkgIna8YNri0UCDv"
+webhook_url = "https://ohyeeeeImAbttocum.com/"
 
 async def fetch_group_data(proxy):
     global checked
