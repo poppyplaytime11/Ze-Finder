@@ -1,0 +1,95 @@
+import asyncio
+import httpx
+import random
+import time
+
+active_threads = 0
+completed_threads = 0
+Ratelimited_Threads = 0
+
+found = 0
+checked = 0
+webhook_url = "https://discord.com/api/webhooks/1207498723861733386/asCpphhX5meFAhKe4-hPhnw7zUzMHn1GCDsZpHv5H2ImSq6sxvV_QkgIna8YNri0UCDv"
+
+async def fetch_group_data(proxy):
+    global checked
+    global found
+    
+    global active_threads
+    global completed_threads
+    global Ratelimited_Threads
+    active_threads += 1
+    thread_checks = 0
+    data = None
+    start_time = time.time()
+    last_sleep_time = start_time
+
+    while True:
+        group_ids = ','.join(str(random.randint(33350000, 34060000)) for _ in range(100))
+        async with httpx.AsyncClient(proxies=proxy) as client:
+            try:
+                response = await client.get(f'https://groups.roblox.com/v2/groups?groupIds={group_ids}')
+                if response.status_code == 200:
+                    data = response.json()
+                    await asyncio.sleep(0)
+                    thread_checks+=1
+                    if thread_checks>99:
+                        thread_checks=0
+                        print("Completed !!!")
+                        print("Completed !!!")
+                        print("Completed !!!")
+                        current_time = time.time()
+                        time_since_last_sleep = current_time - last_sleep_time
+                        sleep_time = max(61 - time_since_last_sleep, 0)  # Adjusted sleep time
+                        active_threads -=1
+                        completed_threads += 1
+                        print(sleep_time)
+                        await asyncio.sleep(sleep_time)
+                        completed_threads -= 1
+                        active_threads +=1
+                        last_sleep_time = time.time()
+                    
+                    for group in data["data"]:
+                        owner = group["owner"]
+                        checked+=1
+                        if not owner:
+                            ownerlessresponse = await client.get(f'https://groups.roblox.com/v1/groups/{group["id"]}')
+                            if ownerlessresponse.status_code == 200:
+                                ownerlessdata = ownerlessresponse.json()
+                                if not ownerlessdata['publicEntryAllowed'] or ownerlessdata.get("isLocked", False):
+                                    continue
+                                found += 1
+                                message = f'||<@426999379325485057>|| :white_check_mark: __Found a Group__ :white_check_mark: [Group](https://www.roblox.com/groups/{ownerlessdata["id"]}/a)'
+                                await send_discord_message(webhook_url, message)
+            except Exception as e:
+                print(f"Error: {e}")
+                active_threads -=1
+                Ratelimited_Threads += 1
+                await asyncio.sleep(5)
+                Ratelimited_Threads -= 1
+                active_threads +=1
+        current_time = time.time()
+        status = f'Active : {active_threads} | Completed : {completed_threads} | Ratelimited/e : {Ratelimited_Threads}'
+        print(f'Found: {found} | Checked Groups: {checked} | Time : {round(current_time - start_time, 2)} seconds | {status}')
+
+async def send_discord_message(webhook_url, message):
+    async with httpx.AsyncClient() as client:
+        payload = {"content": message}
+        await client.post(webhook_url, json=payload)
+
+
+file_name = "proxies.txt"
+proxies = {line.strip() for line in open(file_name)}
+
+print('Fork to run.')
+
+async def main():
+    tasks = []
+    for proxy in proxies:
+        proxy = f"http://{proxy}"
+        proxy = {"://": proxy}
+        task = asyncio.create_task(fetch_group_data(proxy))
+        tasks.append(task)
+    await asyncio.gather(*tasks)
+
+asyncio.run(main())
